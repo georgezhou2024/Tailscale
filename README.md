@@ -22,7 +22,21 @@
 
 ## 一、路由器端安装
 
-### 1. 通过终端安装 Tailscale
+### 一键安装（推荐）
+
+SSH 或 Web 终端 (ttyd) 登录路由器后，直接运行：
+
+```bash
+wget https://raw.githubusercontent.com/georgezhou2024/Tailscale/main/tailscale-setup.sh
+sh tailscale-setup.sh
+```
+
+脚本自动完成：安装 Tailscale → 启动服务 → 配置防火墙放行 80/2026 端口 → 生成登录链接。
+跟着提示在浏览器打开链接授权即可。
+
+---
+
+### 手动安装
 
 SSH 或 Web 终端 (ttyd，地址 `http://192.168.100.1:7681`) 登录路由器后执行：
 
@@ -41,14 +55,14 @@ opkg install tailscale
 > opkg install tailscale
 > ```
 
-### 2. 启动 Tailscale 服务
+#### 启动 Tailscale 服务
 
 ```bash
 /etc/init.d/tailscale enable
 /etc/init.d/tailscale start
 ```
 
-### 3. 登录授权
+#### 登录授权
 
 ```bash
 tailscale up --hostname=iStoreOS --accept-routes
