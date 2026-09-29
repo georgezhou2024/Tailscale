@@ -77,13 +77,25 @@ tailscale ip -4
 
 ## 二、防火墙配置（关键！不做这步网页打不开）
 
+放行 80 端口（LuCI）和 2026 端口（Open-Box 面板）：
+
 ```bash
+# 放行 80 端口（LuCI 后台）
 uci add firewall rule
 uci set firewall.@rule[-1].name='Allow-Tailscale-HTTP'
 uci set firewall.@rule[-1].src='*'
 uci set firewall.@rule[-1].dest_port='80'
 uci set firewall.@rule[-1].proto='tcp'
 uci set firewall.@rule[-1].target='ACCEPT'
+
+# 放行 2026 端口（Open-Box 面板）
+uci add firewall rule
+uci set firewall.@rule[-1].name='Allow-Tailscale-2026'
+uci set firewall.@rule[-1].src='*'
+uci set firewall.@rule[-1].dest_port='2026'
+uci set firewall.@rule[-1].proto='tcp'
+uci set firewall.@rule[-1].target='ACCEPT'
+
 uci commit firewall
 /etc/init.d/firewall restart
 ```
@@ -98,8 +110,8 @@ uci commit firewall
 2. 打开 App，登录同一个 Tailscale 账号
 3. 弹窗请求 VPN 权限，点 **允许**
 4. 确认开关是 **Connected**（蓝色）
-5. 打开 Safari，输入 `http://100.x.x.x`
-6. 输入 LuCI 密码即可管理
+5. 打开 Safari，输入 `http://100.x.x.x:2026`（Open-Box 面板）
+6. 输入密码即可管理
 
 ### 安卓手机
 
@@ -107,7 +119,7 @@ uci commit firewall
 2. 打开 App，登录同一个 Tailscale 账号
 3. 允许 VPN 连接权限
 4. 确认开关是 **Connected**
-5. 打开浏览器，输入 `http://100.x.x.x`
+5. 打开浏览器，输入 `http://100.x.x.x:2026`
 
 ---
 
@@ -118,13 +130,13 @@ uci commit firewall
 1. 打开 https://tailscale.com/download/windows 下载安装
 2. 登录同一个 Tailscale 账号
 3. 系统托盘出现 Tailscale 图标，确认已连接
-4. 浏览器输入 `http://100.x.x.x`
+4. 浏览器输入 `http://100.x.x.x:2026`
 
 ### Mac
 
 1. 打开 App Store 搜索 **Tailscale** 安装
 2. 登录同一个账号
-3. 浏览器输入 `http://100.x.x.x`
+3. 浏览器输入 `http://100.x.x.x:2026`
 
 ---
 
@@ -133,7 +145,7 @@ uci commit firewall
 1. 在新设备上安装 Tailscale 客户端
 2. 登录同一个 Tailscale 账号
 3. 自动加入网络，不需要在路由器上做任何操作
-4. 在手机/电脑上直接用 `http://100.x.x.x` 访问
+4. 在手机/电脑上用 `http://100.x.x.x:2026` 访问 Open-Box 面板
 
 > 注意：免费版最多 3 台设备。
 
