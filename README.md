@@ -1,6 +1,12 @@
+<p align="center">
+  <img src="logo.png" alt="iStoreOS Tailscale" width="120">
+</p>
+
 # iStoreOS Tailscale 远程访问配置指南
 
 在 iStoreOS (OpenWrt 24.10 x86_64) 上通过 Tailscale 实现安全远程访问 LuCI 后台。
+
+不需要公网 IP，不需要 IPv6，不需要端口转发，在任何网络环境下都能连回家。
 
 ## 环境信息
 
@@ -12,14 +18,15 @@
 | 路由器 IP | 192.168.100.1 |
 | Tailscale 版本 | 1.80.3-r1 |
 
-## 安装步骤
+---
+
+## 一、路由器端安装
 
 ### 1. 通过终端安装 Tailscale
 
-SSH 或 Web 终端 (ttyd) 登录路由器后执行：
+SSH 或 Web 终端 (ttyd，地址 `http://192.168.100.1:7681`) 登录路由器后执行：
 
 ```bash
-# 直接从 OpenWrt 官方源安装（24.10 已包含 tailscale）
 opkg update
 opkg install tailscale
 ```
@@ -47,7 +54,7 @@ opkg install tailscale
 tailscale up --hostname=iStoreOS --accept-routes
 ```
 
-终端会输出一个登录链接，类似：
+终端会输出一个登录链接：
 
 ```
 To authenticate, visit:
@@ -56,29 +63,19 @@ To authenticate, visit:
 
 在浏览器打开这个链接，用 Google/GitHub/微软账号登录 Tailscale，点 **Connect** 授权。
 
-看到 **Login successful** 页面就说明路由器已加入 Tailscale 网络。
+看到 **Login successful** 页面就说明路由器已加入网络。
 
-### 4. 查看 Tailscale IP
+### 4. 查看路由器 Tailscale IP
 
 ```bash
 tailscale ip -4
 ```
 
-输出类似 `100.x.x.x`，这就是你的路由器 Tailscale 地址。
+输出类似 `100.x.x.x`，记下来，以后用这个地址访问路由器。
 
-## 防火墙配置（关键！）
+---
 
-安装完后默认防火墙会挡住 Tailscale 访问 LuCI，必须加规则：
-
-### 方法一：把 tailscale0 加入 LAN 区域
-
-```bash
-uci add_list firewall.@zone[0].network='tailscale0'
-uci commit firewall
-/etc/init.d/firewall restart
-```
-
-### 方法二：直接放行 HTTP 端口（实测有效）
+## 二、防火墙配置（关键！不做这步网页打不开）
 
 ```bash
 uci add firewall rule
@@ -91,18 +88,71 @@ uci commit firewall
 /etc/init.d/firewall restart
 ```
 
-## 使用方法
+---
 
-1. 在手机/电脑上安装 Tailscale 客户端
+## 三、手机端设置
+
+### 苹果手机 (iPhone)
+
+1. App Store 搜索 **Tailscale** 下载安装
+2. 打开 App，登录同一个 Tailscale 账号
+3. 弹窗请求 VPN 权限，点 **允许**
+4. 确认开关是 **Connected**（蓝色）
+5. 打开 Safari，输入 `http://100.x.x.x`
+6. 输入 LuCI 密码即可管理
+
+### 安卓手机
+
+1. 应用商店搜索 **Tailscale** 下载安装
+2. 打开 App，登录同一个 Tailscale 账号
+3. 允许 VPN 连接权限
+4. 确认开关是 **Connected**
+5. 打开浏览器，输入 `http://100.x.x.x`
+
+---
+
+## 四、电脑端设置
+
+### Windows
+
+1. 打开 https://tailscale.com/download/windows 下载安装
 2. 登录同一个 Tailscale 账号
-3. 浏览器打开 `http://100.x.x.x`（路由器的 Tailscale IP）
-4. 输入 LuCI 密码即可管理
+3. 系统托盘出现 Tailscale 图标，确认已连接
+4. 浏览器输入 `http://100.x.x.x`
+
+### Mac
+
+1. 打开 App Store 搜索 **Tailscale** 安装
+2. 登录同一个账号
+3. 浏览器输入 `http://100.x.x.x`
+
+---
+
+## 五、添加新设备
+
+1. 在新设备上安装 Tailscale 客户端
+2. 登录同一个 Tailscale 账号
+3. 自动加入网络，不需要在路由器上做任何操作
+4. 在手机/电脑上直接用 `http://100.x.x.x` 访问
+
+> 注意：免费版最多 3 台设备。
+
+---
+
+## 六、删除设备
+
+1. 打开 https://login.tailscale.com/admin/machines
+2. 找到要删除的设备
+3. 点右边 `...` → **Remove**
+4. 确认删除
+
+删除后该设备就不能再连回你的路由器了。
+
+---
 
 ## 常见问题
 
 ### 登录成功但网页打不开
-
-检查防火墙是否放行：
 
 ```bash
 # 确认 tailscale0 接口存在
@@ -119,13 +169,15 @@ curl -sI http://100.x.x.x
 
 ### 手机显示 Connected 但访问不了
 
-- 确认手机浏览器输入的是 `http://` 不是 `https://`
-- 确认 Tailscale App 状态是 active 而不是 idle/offline
-- 在路由器终端执行 `tailscale status` 看手机是否在线
+- 确认浏览器输入的是 `http://` 不是 `https://`
+- 在路由器终端执行 `tailscale status` 看手机是否显示 **active**
+- 如果显示 **idle/offline**，把手机 Tailscale App 关掉重开
 
-### 设备数量限制
+### 不需要公网 IP / IPv6
 
-免费版 Tailscale 最多 3 台设备。在 https://login.tailscale.com/admin/machines 可以删除不用的设备。
+Tailscale 自动打洞，打不通就走中继服务器，任何网络环境都能用。
+
+---
 
 ## 相关项目
 
