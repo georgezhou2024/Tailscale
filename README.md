@@ -2,43 +2,50 @@
   <img src="logo.png" alt="iStoreOS Tailscale" width="200">
 </p>
 
-# iStoreOS Tailscale 杩滅▼璁块棶閰嶇疆鎸囧崡
+# iStoreOS Tailscale 远程访问配置指南
 
-鍦?iStoreOS (OpenWrt 24.10 x86_64) 涓婇€氳繃 Tailscale 瀹炵幇瀹夊叏杩滅▼璁块棶 LuCI 鍚庡彴銆?
-涓嶉渶瑕佸叕缃?IP锛屼笉闇€瑕?IPv6锛屼笉闇€瑕佺鍙ｈ浆鍙戯紝鍦ㄤ换浣曠綉缁滅幆澧冧笅閮借兘杩炲洖瀹躲€?
-## 鐜淇℃伅
+在 iStoreOS (OpenWrt 24.10 x86_64) 上通过 Tailscale 实现安全远程访问 LuCI 后台。
 
-| 椤圭洰 | 淇℃伅 |
+不需要公网 IP，不需要 IPv6，不需要端口转发，在任何网络环境下都能连回家。
+
+## 环境信息
+
+| 项目 | 信息 |
 |------|------|
-| 绯荤粺 | iStoreOS 24.10.8 (OpenWrt) |
-| 鏋舵瀯 | x86_64 |
-| 鍖呯鐞?| opkg |
-| 璺敱鍣?IP | 192.168.100.1 |
-| Tailscale 鐗堟湰 | 1.80.3-r1 |
+| 系统 | iStoreOS 24.10.8 (OpenWrt) |
+| 架构 | x86_64 |
+| 包管理 | opkg |
+| 路由器 IP | 192.168.100.1 |
+| Tailscale 版本 | 1.80.3-r1 |
 
 ---
 
-## 涓€銆佽矾鐢卞櫒绔畨瑁?
-### 涓€閿畨瑁咃紙鎺ㄨ崘锛?
-SSH 鎴?Web 缁堢 (ttyd) 鐧诲綍璺敱鍣ㄥ悗锛岀洿鎺ヨ繍琛岋細
+## 一、路由器端安装
+
+### 一键安装（推荐）
+
+SSH 或 Web 终端 (ttyd) 登录路由器后，直接运行：
 
 ```bash
 wget https://raw.githubusercontent.com/georgezhou2024/Tailscale/main/tailscale-setup.sh
 sh tailscale-setup.sh
 ```
 
-鑴氭湰鑷姩瀹屾垚锛氬畨瑁?Tailscale 鈫?鍚姩鏈嶅姟 鈫?閰嶇疆闃茬伀澧欐斁琛?80/2026 绔彛 鈫?鐢熸垚鐧诲綍閾炬帴銆?璺熺潃鎻愮ず鍦ㄦ祻瑙堝櫒鎵撳紑閾炬帴鎺堟潈鍗冲彲銆?
+脚本自动完成：安装 Tailscale → 启动服务 → 配置防火墙放行 80/2026 端口 → 生成登录链接。
+跟着提示在浏览器打开链接授权即可。
+
 ---
 
-### 鎵嬪姩瀹夎
+### 手动安装
 
-SSH 鎴?Web 缁堢 (ttyd锛屽湴鍧€ `http://192.168.100.1:7681`) 鐧诲綍璺敱鍣ㄥ悗鎵ц锛?
+SSH 或 Web 终端 (ttyd，地址 `http://192.168.100.1:7681`) 登录路由器后执行：
+
 ```bash
 opkg update
 opkg install tailscale
 ```
 
-> 濡傛灉瀹樻柟婧愭病鏈夛紝鍙坊鍔?Tailscale 瀹樻柟婧愶細
+> 如果官方源没有，可添加 Tailscale 官方源：
 > ```bash
 > cd /tmp
 > curl -LO https://pkgs.tailscale.com/stable/opkg-repo-key.gpg
@@ -48,49 +55,55 @@ opkg install tailscale
 > opkg install tailscale
 > ```
 
-#### 鍚姩 Tailscale 鏈嶅姟
+#### 启动 Tailscale 服务
 
 ```bash
 /etc/init.d/tailscale enable
 /etc/init.d/tailscale start
 ```
 
-#### 鐧诲綍鎺堟潈
+#### 登录授权
 
 ```bash
 tailscale up --hostname=iStoreOS --accept-routes
 ```
 
-缁堢浼氳緭鍑轰竴涓櫥褰曢摼鎺ワ細
+终端会输出一个登录链接：
 
 ```
 To authenticate, visit:
     https://login.tailscale.com/a/xxxxxxxxxxxx
 ```
 
-鍦ㄦ祻瑙堝櫒鎵撳紑杩欎釜閾炬帴锛岀敤 Google/GitHub/寰蒋璐﹀彿鐧诲綍 Tailscale锛岀偣 **Connect** 鎺堟潈銆?
-鐪嬪埌 **Login successful** 椤甸潰灏辫鏄庤矾鐢卞櫒宸插姞鍏ョ綉缁溿€?
-### 4. 鏌ョ湅璺敱鍣?Tailscale IP
+在浏览器打开这个链接，用 Google/GitHub/微软账号登录 Tailscale，点 **Connect** 授权。
+
+看到 **Login successful** 页面就说明路由器已加入网络。
+
+### 查看路由器 Tailscale IP
 
 ```bash
 tailscale ip -4
 ```
 
-杈撳嚭绫讳技 `100.x.x.x`锛岃涓嬫潵锛屼互鍚庣敤杩欎釜鍦板潃璁块棶璺敱鍣ㄣ€?
+输出类似 `100.x.x.x`，记下来，以后用这个地址访问路由器。
+
 ---
 
-## 浜屻€侀槻鐏閰嶇疆锛堝叧閿紒涓嶅仛杩欐缃戦〉鎵撲笉寮€锛?
-鏀捐 80 绔彛锛圠uCI锛夊拰 2026 绔彛锛圤pen-Box 闈㈡澘锛夛細
+## 二、防火墙配置（关键！不做这步网页打不开）
+
+放行 80 端口（LuCI）和 2026 端口（Open-Box 面板）：
 
 ```bash
-# 鏀捐 80 绔彛锛圠uCI 鍚庡彴锛?uci add firewall rule
+# 放行 80 端口（LuCI 后台）
+uci add firewall rule
 uci set firewall.@rule[-1].name='Allow-Tailscale-HTTP'
 uci set firewall.@rule[-1].src='*'
 uci set firewall.@rule[-1].dest_port='80'
 uci set firewall.@rule[-1].proto='tcp'
 uci set firewall.@rule[-1].target='ACCEPT'
 
-# 鏀捐 2026 绔彛锛圤pen-Box 闈㈡澘锛?uci add firewall rule
+# 放行 2026 端口（Open-Box 面板）
+uci add firewall rule
 uci set firewall.@rule[-1].name='Allow-Tailscale-2026'
 uci set firewall.@rule[-1].src='*'
 uci set firewall.@rule[-1].dest_port='2026'
@@ -103,87 +116,96 @@ uci commit firewall
 
 ---
 
-## 涓夈€佹墜鏈虹璁剧疆
+## 三、手机端设置
 
-### 鑻规灉鎵嬫満 (iPhone)
+### 苹果手机 (iPhone)
 
-1. App Store 鎼滅储 **Tailscale** 涓嬭浇瀹夎
-2. 鎵撳紑 App锛岀櫥褰曞悓涓€涓?Tailscale 璐﹀彿
-3. 寮圭獥璇锋眰 VPN 鏉冮檺锛岀偣 **鍏佽**
-4. 纭寮€鍏虫槸 **Connected**锛堣摑鑹诧級
-5. 鎵撳紑 Safari锛岃緭鍏?`http://100.x.x.x:2026`锛圤pen-Box 闈㈡澘锛?6. 杈撳叆瀵嗙爜鍗冲彲绠＄悊
+1. App Store 搜索 **Tailscale** 下载安装
+2. 打开 App，登录同一个 Tailscale 账号
+3. 弹窗请求 VPN 权限，点 **允许**
+4. 确认开关是 **Connected**（蓝色）
+5. 打开 Safari，输入 `http://100.x.x.x:2026`（Open-Box 面板）
+6. 输入密码即可管理
 
-### 瀹夊崜鎵嬫満
+### 安卓手机
 
-1. 搴旂敤鍟嗗簵鎼滅储 **Tailscale** 涓嬭浇瀹夎
-2. 鎵撳紑 App锛岀櫥褰曞悓涓€涓?Tailscale 璐﹀彿
-3. 鍏佽 VPN 杩炴帴鏉冮檺
-4. 纭寮€鍏虫槸 **Connected**
-5. 鎵撳紑娴忚鍣紝杈撳叆 `http://100.x.x.x:2026`
+1. 应用商店搜索 **Tailscale** 下载安装
+2. 打开 App，登录同一个 Tailscale 账号
+3. 允许 VPN 连接权限
+4. 确认开关是 **Connected**
+5. 打开浏览器，输入 `http://100.x.x.x:2026`
 
 ---
 
-## 鍥涖€佺數鑴戠璁剧疆
+## 四、电脑端设置
 
 ### Windows
 
-1. 鎵撳紑 https://tailscale.com/download/windows 涓嬭浇瀹夎
-2. 鐧诲綍鍚屼竴涓?Tailscale 璐﹀彿
-3. 绯荤粺鎵樼洏鍑虹幇 Tailscale 鍥炬爣锛岀‘璁ゅ凡杩炴帴
-4. 娴忚鍣ㄨ緭鍏?`http://100.x.x.x:2026`
+1. 打开 https://tailscale.com/download/windows 下载安装
+2. 登录同一个 Tailscale 账号
+3. 系统托盘出现 Tailscale 图标，确认已连接
+4. 浏览器输入 `http://100.x.x.x:2026`
 
 ### Mac
 
-1. 鎵撳紑 App Store 鎼滅储 **Tailscale** 瀹夎
-2. 鐧诲綍鍚屼竴涓处鍙?3. 娴忚鍣ㄨ緭鍏?`http://100.x.x.x:2026`
+1. 打开 App Store 搜索 **Tailscale** 安装
+2. 登录同一个账号
+3. 浏览器输入 `http://100.x.x.x:2026`
 
 ---
 
-## 浜斻€佹坊鍔犳柊璁惧
+## 五、添加新设备
 
-1. 鍦ㄦ柊璁惧涓婂畨瑁?Tailscale 瀹㈡埛绔?2. 鐧诲綍鍚屼竴涓?Tailscale 璐﹀彿
-3. 鑷姩鍔犲叆缃戠粶锛屼笉闇€瑕佸湪璺敱鍣ㄤ笂鍋氫换浣曟搷浣?4. 鍦ㄦ墜鏈?鐢佃剳涓婄敤 `http://100.x.x.x:2026` 璁块棶 Open-Box 闈㈡澘
+1. 在新设备上安装 Tailscale 客户端
+2. 登录同一个 Tailscale 账号
+3. 自动加入网络，不需要在路由器上做任何操作
+4. 在手机/电脑上用 `http://100.x.x.x:2026` 访问 Open-Box 面板
 
-> 娉ㄦ剰锛氬厤璐圭増鏈€澶?3 鍙拌澶囥€?
+> 注意：免费版最多 3 台设备。
+
 ---
 
-## 鍏€佸垹闄よ澶?
-1. 鎵撳紑 https://login.tailscale.com/admin/machines
-2. 鎵惧埌瑕佸垹闄ょ殑璁惧
-3. 鐐瑰彸杈?`...` 鈫?**Remove**
-4. 纭鍒犻櫎
+## 六、删除设备
 
-鍒犻櫎鍚庤璁惧灏变笉鑳藉啀杩炲洖浣犵殑璺敱鍣ㄤ簡銆?
+1. 打开 https://login.tailscale.com/admin/machines
+2. 找到要删除的设备
+3. 点右边 `...` → **Remove**
+4. 确认删除
+
+删除后该设备就不能再连回你的路由器了。
+
 ---
 
-## 甯歌闂
+## 常见问题
 
-### 鐧诲綍鎴愬姛浣嗙綉椤垫墦涓嶅紑
+### 登录成功但网页打不开
 
 ```bash
-# 纭 tailscale0 鎺ュ彛瀛樺湪
+# 确认 tailscale0 接口存在
 ip addr show tailscale0
 
-# 纭 uhttpd 鐩戝惉鎵€鏈夋帴鍙?netstat -tlnp | grep :80
-# 搴旇鐪嬪埌 0.0.0.0:80
+# 确认 uhttpd 监听所有接口
+netstat -tlnp | grep :80
+# 应该看到 0.0.0.0:80
 
-# 浠庤矾鐢卞櫒鏈満娴嬭瘯
+# 从路由器本机测试
 curl -sI http://100.x.x.x
-# 搴旇杩斿洖 200 OK
+# 应该返回 200 OK
 ```
 
-### 鎵嬫満鏄剧ず Connected 浣嗚闂笉浜?
-- 纭娴忚鍣ㄨ緭鍏ョ殑鏄?`http://` 涓嶆槸 `https://`
-- 鍦ㄨ矾鐢卞櫒缁堢鎵ц `tailscale status` 鐪嬫墜鏈烘槸鍚︽樉绀?**active**
-- 濡傛灉鏄剧ず **idle/offline**锛屾妸鎵嬫満 Tailscale App 鍏虫帀閲嶅紑
+### 手机显示 Connected 但访问不了
 
-### 涓嶉渶瑕佸叕缃?IP / IPv6
+- 确认浏览器输入的是 `http://` 不是 `https://`
+- 在路由器终端执行 `tailscale status` 看手机是否显示 **active**
+- 如果显示 **idle/offline**，把手机 Tailscale App 关掉重开
 
-Tailscale 鑷姩鎵撴礊锛屾墦涓嶉€氬氨璧颁腑缁ф湇鍔″櫒锛屼换浣曠綉缁滅幆澧冮兘鑳界敤銆?
+### 不需要公网 IP / IPv6
+
+Tailscale 自动打洞，打不通就走中继服务器，任何网络环境都能用。
+
 ---
 
-## 鐩稿叧椤圭洰
+## 相关项目
 
-- [luci-app-ups-manager](https://github.com/liuyuhao1023/luci-app-ups-manager) 鈥?UPS 鐢垫簮绠＄悊鎻掍欢
-- [Tailscale 瀹樼綉](https://tailscale.com)
-
+- [luci-app-ups-manager](https://github.com/liuyuhao1023/luci-app-ups-manager) — UPS 电源管理插件
+- [Tailscale 官网](https://tailscale.com)
